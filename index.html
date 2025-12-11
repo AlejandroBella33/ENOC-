@@ -1,104 +1,92 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>ENOC Token (Estados No Ordinarios de Conciencia)</title>
-
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background: #0b0f19;
-            color: #e9e9e9;
-            margin: 0;
-            padding: 0;
-            text-align: center;
-        }
-
-        header {
-            padding: 40px 20px;
-        }
-
-        img.logo {
-            width: 160px;
-            margin-bottom: 20px;
-        }
-
-        h1 {
-            font-size: 28px;
-            color: #4fc3f7;
-        }
-
-        section {
-            max-width: 650px;
-            margin: auto;
-            padding: 20px;
-            line-height: 1.6;
-            text-align: left;
-        }
-
-        .btn {
-            display: inline-block;
-            margin-top: 20px;
-            padding: 12px 20px;
-            background: #4fc3f7;
-            color: black;
-            border-radius: 6px;
-            text-decoration: none;
-            font-weight: bold;
-        }
-
-        footer {
-            margin-top: 40px;
-            padding: 20px;
-            opacity: 0.6;
-            font-size: 14px;
-        }
-    </style>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>ENOC — Estados No Ordinarios de Conciencia</title>
+  <link rel="stylesheet" href="style.css">
 </head>
-
 <body>
+  <main class="page">
+    <div class="hero">
+      <div class="hero-inner">
+        <img src="logoenoc.svg" alt="ENOC logo" class="logo" />
+        <h1 class="title">ENOC</h1>
+        <p class="subtitle">Estados No Ordinarios de Conciencia — Token en Polygon (ENOC)</p>
 
-<header>
-    <img src="logoenoc.svg" alt="ENOC logo" class="logo" />
-    <h1>ENOC Token</h1>
-    <p>(Estados No Ordinarios de Conciencia)</p>
-</header>
+        <div class="meta">
+          <div class="contract">
+            <label>Contrato</label>
+            <div class="contract-row">
+              <code id="contract">0xab8DF9213d13a3cDe984A83129e6acDaCBA78633</code>
+              <button id="copyBtn" class="ghost">Copiar</button>
+            </div>
+          </div>
 
-<section>
-    <h2>¿Qué es ENOC?</h2>
-    <p>
-        ENOC es un token experimental en la red Polygon, creado para explorar nuevas formas 
-        de comunidad, economía consciente y modelos de participación basados en estabilidad,
-        transparencia y crecimiento sostenible.
-    </p>
+          <div class="links">
+            <a id="btnBuy" class="btn primary" target="_blank" rel="noopener">Comprar ENOC</a>
+            <a id="btnScan" class="btn ghost" target="_blank" rel="noopener">Ver en PolygonScan</a>
+            <a href="https://t.me/enocon" class="btn alt" target="_blank" rel="noopener">Telegram</a>
+          </div>
+        </div>
 
-    <h2>Características</h2>
-    <ul>
-        <li>Token ERC-20 en Polygon.</li>
-        <li>Liquidez pública en DEX.</li>
-        <li>Proyecto independiente y transparente.</li>
-        <li>Enfoque en comunidad y educación financiera.</li>
-    </ul>
+        <p class="desc">
+          ENOC es un token experimental en Polygon, creado para explorar modelos comunitarios, transparencia y crecimiento sostenido.
+        </p>
 
-    <h2>Contrato del Token</h2>
-    <p><strong>Dirección:</strong><br>
-        0xab8DF9213d13a3cDe984A83129e6acDaCBA78633
-    </p>
+        <div class="cards">
+          <div class="card">
+            <h4>Red</h4>
+            <p>Polygon (Matic)</p>
+          </div>
+          <div class="card">
+            <h4>Símbolo</h4>
+            <p>ENOC</p>
+          </div>
+          <div class="card">
+            <h4>Tipo</h4>
+            <p>ERC-20 (Polygon)</p>
+          </div>
+        </div>
 
-    <a href="https://polygonscan.com/token/0xab8DF9213d13a3cDe984A83129e6acDaCBA78633" target="_blank" class="btn">
-        Ver en PolygonScan
-    </a>
+        <p class="hint">Nota: para comprar desde la web recomendamos MetaMask/Trust/WalletConnect. Si usas World App, usa la mini-app nativa.</p>
 
-    <h2>Comunidad</h2>
-    <p>Únete al grupo oficial para novedades y actualizaciones:</p>
+        <p class="credit">© ENOC — Proyecto comunitario</p>
+      </div>
+    </div>
 
-    <a href="https://t.me/https://t.me/enocon" target="_blank" class="btn">Telegram oficial</a>
-</section>
+    <!-- animated background (canvas fallback) -->
+    <div id="bg-stars" class="bg-stars" aria-hidden="true"></div>
+    <div id="bg-portal" class="bg-portal" aria-hidden="true"></div>
+  </main>
 
-<footer>
-    © ENOC Token – Proyecto experimental en Polygon
-</footer>
+  <script>
+    // Config
+    const CONTRACT = "0xab8DF9213d13a3cDe984A83129e6acDaCBA78633";
+    const USDT = "0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174";
+    const ENOC = CONTRACT;
+    // QuickSwap swap URL (Polygon)
+    const quickswapURL = `https://quickswap.exchange/#/swap?outputCurrency=${ENOC}&inputCurrency=${USDT}`;
 
+    // DOM
+    document.getElementById("contract").innerText = CONTRACT;
+    document.getElementById("btnBuy").href = quickswapURL;
+    document.getElementById("btnScan").href = `https://polygonscan.com/token/${CONTRACT}`;
+
+    // copy contract
+    document.getElementById("copyBtn").addEventListener("click", async () => {
+      try {
+        await navigator.clipboard.writeText(CONTRACT);
+        const btn = document.getElementById("copyBtn");
+        btn.innerText = "Copiado";
+        setTimeout(()=> btn.innerText = "Copiar", 1500);
+      } catch (e) {
+        alert("No se pudo copiar. Copia manualmente: " + CONTRACT);
+      }
+    });
+
+    // small star animation using CSS classes already in style.css
+    // no heavy JS required for battery friendliness
+  </script>
 </body>
 </html>
