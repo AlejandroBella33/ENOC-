@@ -14,6 +14,28 @@
         <h1 class="title">ENOC</h1>
         <p class="subtitle">Estados No Ordinarios de Conciencia — Token en Polygon (ENOC)</p>
 
+        <div class="dashboard">
+          <h3>Conectar Wallet</h3>
+          <div class="status-box">
+            <p id="statusText" class="status-msg"></p>
+
+            <div id="notConnectedPanel">
+              <button id="btnConnect" class="btn primary">Conectar Wallet</button>
+            </div>
+
+            <div id="connectedPanel" style="display: none;">
+              <p>Conectado:</p>
+              <p>Cuenta: <code id="account"></code></p>
+              <p>Chain ID: <code id="chain"></code></p>
+              <button id="btnDisconnect" class="btn alt" style="display: none;">Desconectar</button>
+              
+              <div class="buy-interface">
+                <input type="number" id="amountUSDT" placeholder="Cantidad de USDT a gastar" min="0.01" step="0.01" />
+                <button id="btnBuy" class="btn primary">Comprar ENOC (Swap)</button>
+              </div>
+            </div>
+          </div>
+        </div>
         <div class="meta">
           <div class="contract">
             <label>Contrato</label>
@@ -24,7 +46,7 @@
           </div>
 
           <div class="links">
-            <a id="btnBuy" class="btn primary" target="_blank" rel="noopener">Comprar ENOC</a>
+            <a id="btnQuickSwap" class="btn primary" target="_blank" rel="noopener">Comprar en QuickSwap</a>
             <a id="btnScan" class="btn ghost" target="_blank" rel="noopener">Ver en PolygonScan</a>
             <a href="https://t.me/enocon" class="btn alt" target="_blank" rel="noopener">Telegram</a>
           </div>
@@ -36,56 +58,12 @@
 
         <div class="how-to" id="howto">
           <h3>Cómo comprar ENOC — paso a paso</h3>
-
-          <div class="step">
-            <h4>1) Comprar con MetaMask (móvil o extensión)</h4>
-            <ol>
-              <li>Abrí MetaMask y seleccioná la red <strong>Polygon (Mainnet)</strong>.</li>
-              <li>Añadí fondos (USDT en Polygon) o bridgéalos desde otra red.</li>
-              <li>Ir a <em>Swap</em> en MetaMask y pegar la dirección del token ENOC (<code>0xab8DF9...6633</code>) en "To".</li>
-              <li>Seleccioná la cantidad de USDT y ajustá el <strong>slippage</strong> al 1–3% (si tu pool es líquido, 1% está bien).</li>
-              <li>Confirmá la transacción y espera la confirmación en PolygonScan.</li>
-            </ol>
-            <p class="small">Consejo: si el token no aparece en MetaMask, usá "Import token" y pega la dirección del contrato.</p>
           </div>
 
-          <div class="step">
-            <h4>2) Comprar desde DEXTools (interfaz rápida) </h4>
-            <ol>
-              <li>Abrí DEXTools y buscá el par <strong>ENOC / USDT</strong> (o pega la dirección del contrato).</li>
-              <li>Usá el botón <em>Swap</em> que ofrece DEXTools para abrir QuickSwap/Uniswap con el par preconfigurado.</li>
-              <li>Conecta tu wallet (WalletConnect o MetaMask) cuando te lo pida.</li>
-              <li>Introduce la cantidad y confirma (revisa slippage y gas).</li>
-            </ol>
-            <p class="small">DEXTools facilita ver liquidez y actividad antes de comprar.</p>
-          </div>
-
-          <div class="step">
-            <h4>3) Comprar en QuickSwap (backup)</h4>
-            <ol>
-              <li>Ir a QuickSwap: <a href="#" id="quickswapLink" target="_blank">Abrir QuickSwap</a>.</li>
-              <li>Conectar wallet, elegir <strong>USDT → ENOC</strong> (pega la dirección ENOC si no aparece).</li>
-              <li>Establecer slippage (1–3%) y confirmar swap.</li>
-            </ol>
-          </div>
-
-          <p class="disclaimer">Importante: en todas las compras revisá siempre la dirección del contrato y el slippage para evitar pérdidas. Empieza con montos pequeños para probar.</p>
-        </div>
+        <p class="disclaimer">Importante: en todas las compras revisá siempre la dirección del contrato y el slippage para evitar pérdidas. Empieza con montos pequeños para probar.</p>
 
         <div class="cards">
-          <div class="card">
-            <h4>Red</h4>
-            <p>Polygon (Matic)</p>
           </div>
-          <div class="card">
-            <h4>Símbolo</h4>
-            <p>ENOC</p>
-          </div>
-          <div class="card">
-            <h4>Tipo</h4>
-            <p>ERC-20 (Polygon)</p>
-          </div>
-        </div>
 
         <p class="hint">Nota: para comprar desde la web recomendamos MetaMask/Trust/WalletConnect. Si usas World App, usa la mini-app nativa.</p>
 
@@ -97,14 +75,19 @@
     <div id="bg-portal" class="bg-portal" aria-hidden="true"></div>
   </main>
 
-  <script>
+  <script src="https://unpkg.com/web3@latest/dist/web3.min.js"></script>
+  <script src="https://unpkg.com/web3modal@1.9.12/dist/index.js"></script>
+  <script src="https://unpkg.com/@walletconnect/web3-provider@1.8.0/dist/umd/index.min.js"></script>
+  
+  <script src="app.js"></script> <script>
+    // ... (Script de configuración inicial y copiadora) ...
     const CONTRACT = "0xab8DF9213d13a3cDe984A83129e6acDaCBA78633";
     const USDT = "0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174";
     const ENOC = CONTRACT;
     const quickswapURL = `https://quickswap.exchange/#/swap?outputCurrency=${ENOC}&inputCurrency=${USDT}`;
 
     document.getElementById("contract").innerText = CONTRACT;
-    document.getElementById("btnBuy").href = quickswapURL;
+    document.getElementById("btnQuickSwap").href = quickswapURL; // Cambié 'btnBuy' por 'btnQuickSwap' para evitar confusión con el botón de swap en el dashboard
     document.getElementById("btnScan").href = `https://polygonscan.com/token/${CONTRACT}`;
     document.getElementById("quickswapLink").href = quickswapURL;
 
