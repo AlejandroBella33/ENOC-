@@ -53,7 +53,7 @@ body{
 /* logo and title */
 .logo{ width:120px; display:block; margin: 0 auto 12px; filter: drop-shadow(0 6px 18px rgba(79,195,247,0.18)); }
 .title{ text-align:center; font-size:34px; margin:0; color:var(--accent); letter-spacing:1px; }
-.subtitle{ text-align:center; margin-top:6px; color:var(--muted); font-size:14px; }
+.subtitle{ text-align:center; margin-top:6px; color:var(--muted); font-size:14px }
 
 /* meta container */
 .meta{ margin-top:18px; display:flex; flex-direction:column; gap:14px; align-items:center;}
@@ -69,8 +69,13 @@ body{
 .btn.ghost{ background: transparent; border: 1px solid rgba(255,255,255,0.06); color:var(--muted); padding:9px 12px; }
 .btn.alt{ background: linear-gradient(90deg,var(--accent-2), #f7a84a); color:#071022; }
 
-/* small desc */
-.desc{ margin-top:16px; color:rgba(235,245,255,0.85); font-size:15px; max-width:760px; margin-left:auto; margin-right:auto; text-align:center; }
+/* how-to */
+.how-to{ margin-top:20px; background: linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.00)); border-radius:12px; padding:14px; border:1px solid rgba(255,255,255,0.02); }
+.how-to h3{ margin:0 0 12px; color:var(--accent); }
+.step{ margin-bottom:12px; }
+.step h4{ margin:6px 0; color:#eaf8ff; font-size:15px; }
+.step ol{ margin:6px 0 8px 18px; color:rgba(255,255,255,0.9); }
+.step .small{ font-size:12px; color:rgba(255,255,255,0.6); }
 
 /* cards */
 .cards{ display:flex; gap:12px; margin-top:18px; justify-content:center; flex-wrap:wrap; }
@@ -81,9 +86,6 @@ body{
 /* hint & credit */
 .hint{ margin-top:12px; font-size:13px; color:rgba(255,255,255,0.6); text-align:center; }
 .credit{ margin-top:18px; font-size:13px; color:rgba(255,255,255,0.35); text-align:center; }
-
-/* ghost button small */
-.ghost{ background:transparent; border:1px solid rgba(255,255,255,0.06); padding:8px 10px; border-radius:8px; color:var(--muted); }
 
 /* responsive */
 @media(min-width:760px){
@@ -97,7 +99,7 @@ body{
 /* small animation for button hover */
 .btn.primary:hover{ transform: translateY(-2px); transition: transform .18s ease; }
 
-/* subtle glowing ring around logo using pseudo-element (works if svg has transparent background) */
+/* subtle glowing ring around logo using pseudo-element */
 .logo { position: relative; }
 .logo::after {
   content: "";
