@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>ENOC — Estados No Ordinarios de Conciencia</title>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css"> 
 </head>
 <body>
   <main class="page">
@@ -41,9 +41,9 @@
             <h3>🛡️ Reglas de Estabilidad y Crecimiento Consciente</h3>
             <p><strong>Para fomentar un crecimiento equilibrado y proteger a nuestros *hodlers*, el Contrato Inteligente ENOC incluye mecanismos anti-ballena:</strong></p>
             <ul>
-                <li><strong>Límite de Holding:</strong> Ninguna billetera individual (aparte de las de tesorería del proyecto) puede poseer más del 5% del suministro total de tokens.</li>
-                <li><strong>Límite de Venta:</strong> Se impone un límite máximo a la cantidad de ENOC que se puede vender en una sola transacción.</li>
-                <li><strong>Período de Retiro:</strong> Las ventas sucesivas pueden tener un *cooldown* temporal.</li>
+                <li><strong>Límite de Holding:</strong> Ninguna billetera individual puede poseer más del 5% del suministro total de tokens.</li>
+                <li><strong>Límite de Venta Progresivo:</strong> Las ventas se limitan a un % de tu balance (5% al inicio, hasta 30%) y solo se permiten cada 8 horas.</li>
+                <li><strong>Retiro Gradual:</strong> La capacidad máxima de venta aumenta con la antigüedad de tu *holding*.</li>
             </ul>
             <p class="small">Revisa siempre el contrato oficial para la información más precisa sobre las limitaciones antes de interactuar. Si la compra falla, puede ser por estos límites.</p>
         </div>
@@ -126,7 +126,7 @@
   <script src="app.js"></script>
 
   <script>
-    const CONTRACT = "0xab8DF9213d13a3cDe984A83129e6acDaCBA78633";
+    const CONTRACT = "0xab8DF9213d13a3cDe984A83129e6acDaCBA78633"; // ESTO DEBE SER REEMPLAZADO CON LA NUEVA DIRECCIÓN DE ENOCV2
     const USDT = "0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174";
     const ENOC = CONTRACT;
     const quickswapURL = `https://quickswap.exchange/#/swap?outputCurrency=${ENOC}&inputCurrency=${USDT}`;
