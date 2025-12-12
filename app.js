@@ -32,6 +32,7 @@ let web3Modal, providerInstance, web3, currentAccount;
 // Init Web3Modal
 function initWeb3Modal() {
   const providerOptions = {
+    // Definimos WalletConnect como una opción explícita
     walletconnect: {
       package: window.WalletConnectProvider.default,
       options: {
@@ -41,11 +42,14 @@ function initWeb3Modal() {
         chainId: CONFIG.desiredChainId
       }
     }
+    // Web3Modal automáticamente agregará opciones para billeteras inyectadas (MetaMask)
   };
 
   web3Modal = new window.Web3Modal.default({
     cacheProvider: false,
-    providerOptions
+    providerOptions,
+    // La opción 'disableInjectedProvider' a menudo ayuda a forzar el modal en móviles
+    disableInjectedProvider: false
   });
 }
 
@@ -63,20 +67,20 @@ function showConnected(address, chainId) {
 // connect (universal)
 async function connectWallet() {
   try {
-    setStatus("Conectando wallet...");
-    // open modal (handles injected wallets and walletconnect)
+    setStatus("Abriendo el selector de Wallet...");
+    
+    // Abrir el modal que permite elegir la billetera (incluyendo WalletConnect QR)
     providerInstance = await web3Modal.connect();
-    // create web3 instance
+    
+    // Si la conexión es exitosa, el resto del código es el mismo:
     web3 = new Web3(providerInstance);
-    // get accounts
     const accounts = await web3.eth.getAccounts();
     currentAccount = accounts[0];
-    // chain id as number
     let chainId = await web3.eth.getChainId();
     showConnected(currentAccount, chainId);
     setStatus("Conectado en chain " + chainId);
 
-    // events for accounts/chain changes
+    // Eventos para cambios de cuenta/cadena
     if (providerInstance.on) {
       providerInstance.on("accountsChanged", (accounts) => {
         currentAccount = accounts[0];
@@ -96,7 +100,6 @@ async function connectWallet() {
       });
     }
 
-    // check network
     if (Number(await web3.eth.getChainId()) !== CONFIG.desiredChainId) {
       setStatus("Por favor cambie la red a Polygon (137) en su wallet.");
     } else {
@@ -105,15 +108,18 @@ async function connectWallet() {
 
   } catch (err) {
     console.error("connectWallet error", err);
-    setStatus("No se pudo conectar la wallet.");
+    setStatus("No se pudo conectar la wallet. Intenta usar el Navegador DApp de tu billetera.");
   }
 }
 
 async function disconnectWallet() {
   try {
     if (providerInstance && providerInstance.close) {
+      // Para WalletConnect
       await providerInstance.close();
     }
+    // Para billeteras inyectadas (MetaMask)
+    await web3Modal.clearCachedProvider();
   } catch (e) { /* ignore */ }
   currentAccount = null;
   web3 = null;
@@ -142,26 +148,22 @@ async function buyENOC() {
   setStatus("Preparando transacción...");
 
   try {
-    // router & contracts
     const router = new web3.eth.Contract(routerABI, CONFIG.routerAddress);
     const usdt = new web3.eth.Contract(erc20ABI, CONFIG.usdtAddress);
 
-    // Convert USDT to 6-decimals format (USDT on Polygon uses 6 decimals)
     const amountIn = web3.utils.toWei(amountUSDT, "mwei"); 
 
-    // Approve router to spend USDT
+    // --- 1. APROBACIÓN ---
     setStatus("Solicitando aprobación USDT...");
     const approveTx = await usdt.methods.approve(CONFIG.routerAddress, amountIn).send({ from: currentAccount });
     setStatus("Aprobación confirmada. Ejecutando swap...");
 
-    // Deadline 2 minutes ahead
-    const deadline = Math.floor(Date.now() / 1000) + 120;
+    const deadline = Math.floor(Date.now() / 1000) + 120; // 2 minutos
 
-    // Swap: USDT -> ENOC
-    // amountOutMin set to 0 for demo (NOT recommended in production, usar Price Feeds)
+    // --- 2. SWAP ---
     const swapTx = await router.methods.swapExactTokensForTokens(
       amountIn,
-      0,
+      0, // amountOutMin = 0 (usar un slippage real en producción)
       [CONFIG.usdtAddress, CONFIG.enocAddress],
       currentAccount,
       deadline
@@ -171,9 +173,8 @@ async function buyENOC() {
     setStatus("Swap realizado. Revisa tu wallet.");
   } catch (err) {
     console.error("buyENOC error", err);
-    // Este mensaje de error cubre los errores de gas, y también los errores de los límites del nuevo Contrato ENOCv2.
-    setStatus("Error en la transacción. La compra/venta puede exceder los límites anti-ballena del contrato.");
-    alert("Error: La transacción ha fallado. Esto puede deberse a que excede los límites de compra/holding del Contrato Anti-Ballena, o a un error de gas: " + (err.message || err));
+    setStatus("Error en la transacción. El error puede ser por límites anti-ballena o falta de MATIC para gas.");
+    alert("Error: La transacción ha fallado. Revisa los límites de ENOCv2 o tu saldo de MATIC: " + (err.message || err));
   }
 }
 
