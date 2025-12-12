@@ -76,7 +76,7 @@
         // =========================================================
         const CONTRACT = "0xab8DF9213d13a3cDe984A83129e6acDaCBA78633";
         const USDT = "0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174";
-        const ENOC = CONTRACT; // Alias
+        const ENOC = CONTRACT;
         const QUICKSWAP_ROUTER = "0xa5E0829CaCEd8fFDD4De3c43696c57F7D7A678ff"; 
         const POLYGON_RPC = "https://polygon-rpc.com";
         const CHAIN_ID = 137; // Polygon Mainnet
@@ -110,7 +110,7 @@
         ];
 
         // =========================================================
-        // STATE & UI
+        // STATE & UI refs
         // =========================================================
         let web3Modal;
         let provider;
@@ -123,187 +123,180 @@
         const accountEl = document.getElementById("account");
         const chainEl = document.getElementById("chain");
 
-        function setStatus(msg) { 
+        function setStatus(msg) {
             console.log("[STATUS]", msg);
-            statusText.innerText = msg; 
+            if (statusText) statusText.innerText = msg;
         }
 
         function updateUI(account, chainId) {
-            accountEl.innerText = account;
-            chainEl.innerText = chainId;
-            notConnectedPanel.style.display = "none";
-            connectedPanel.style.display = "block";
+            if (accountEl) accountEl.innerText = account || "";
+            if (chainEl) chainEl.innerText = chainId || "";
+            if (notConnectedPanel) notConnectedPanel.style.display = "none";
+            if (connectedPanel) connectedPanel.style.display = "block";
         }
-        
+
         function resetUI() {
-            accountEl.innerText = "";
-            chainEl.innerText = "";
-            statusText.innerText = "Desconectado";
-            notConnectedPanel.style.display = "block";
-            connectedPanel.style.display = "none";
+            if (accountEl) accountEl.innerText = "";
+            if (chainEl) chainEl.innerText = "";
+            if (statusText) statusText.innerText = "Desconectado";
+            if (notConnectedPanel) notConnectedPanel.style.display = "block";
+            if (connectedPanel) connectedPanel.style.display = "none";
         }
 
         // =========================================================
-        // WEB3MODAL + WALLETCONNECT INIT (mobile-friendly)
+        // INIT WEB3Modal (desktop fallback) - keep but we'll prioritize WalletConnect on mobile
         // =========================================================
         function initWeb3Modal() {
-            const isMobile = /Mobi|Android/i.test(navigator.userAgent);
-            console.log("isMobile:", isMobile, "userAgent:", navigator.userAgent);
-
-            const providerOptions = {
-                walletconnect: {
-                    package: window.WalletConnectProvider?.default || window.WalletConnectProvider,
-                    options: {
-                        rpc: { [CHAIN_ID]: POLYGON_RPC },
-                        network: "polygon",
-                        qrcode: !isMobile // QR only on desktop
+            try {
+                const isMobile = /Mobi|Android/i.test(navigator.userAgent);
+                const providerOptions = {
+                    walletconnect: {
+                        package: window.WalletConnectProvider?.default || window.WalletConnectProvider,
+                        options: {
+                            rpc: { [CHAIN_ID]: POLYGON_RPC },
+                            network: "polygon",
+                            qrcode: !isMobile
+                        }
                     }
+                };
+                const Web3ModalConstructor = (window.Web3Modal && window.Web3Modal.default) ? window.Web3Modal.default : window.Web3Modal;
+                if (!Web3ModalConstructor) {
+                    console.warn("Web3Modal no disponible desde CDN");
+                    return;
                 }
-            };
-
-            const Web3ModalConstructor = (window.Web3Modal && window.Web3Modal.default) ? window.Web3Modal.default : window.Web3Modal;
-            if (!Web3ModalConstructor) {
-                console.warn("Web3Modal no disponible desde CDN.");
-                setStatus("Error: Web3Modal no cargado");
-                return;
+                web3Modal = new Web3ModalConstructor({ cacheProvider: true, providerOptions, theme: "dark" });
+                console.log("Web3Modal inicializado");
+            } catch (e) {
+                console.warn("initWeb3Modal error:", e);
             }
-
-            web3Modal = new Web3ModalConstructor({
-                cacheProvider: true,
-                providerOptions,
-                theme: "dark"
-            });
-            console.log("web3Modal initialized");
         }
 
         // =========================================================
-        // CONNECT FLOW (with several fallbacks)
+        // CONNECT FLOWS
+        //  - prefer injected provider if present (MetaMask in-app)
+        //  - on mobile: prefer direct WalletConnectProvider (deep-link qrcode:false)
+        //  - fallback: Web3Modal
         // =========================================================
+        async function connectWithWalletConnectDirect() {
+            setStatus("Conectando con WalletConnect...");
+            const WCPkg = window.WalletConnectProvider?.default || window.WalletConnectProvider;
+            if (!WCPkg) throw new Error("WalletConnectProvider no está disponible");
+
+            // qrcode:false para forzar deep-link en móviles; en desktop puedes usar qrcode:true
+            const wcProvider = new WCPkg({
+                rpc: { [CHAIN_ID]: POLYGON_RPC },
+                qrcode: false
+            });
+
+            // provider.enable() genera la URI y en móviles abrirá el deep link
+            await wcProvider.enable();
+            return wcProvider;
+        }
+
         async function onConnect() {
             const isMobile = /Mobi|Android/i.test(navigator.userAgent);
             setStatus("Iniciando conexión...");
 
             try {
-                // 1) Si hay provider inyectado (MetaMask in-app), pedir cuentas directamente
+                // 1) Si hay provider inyectado y estamos dentro de una wallet-app in-app, usarlo (MetaMask in-app)
                 if (window.ethereum && window.ethereum.request) {
                     try {
-                        console.log("Intentando provider inyectado (window.ethereum)...");
-                        setStatus("Solicitando permiso a wallet inyectada...");
+                        setStatus("Solicitando cuentas al provider inyectado...");
                         await window.ethereum.request({ method: 'eth_requestAccounts' });
                         provider = window.ethereum;
                         web3 = new window.Web3(provider);
+                        subscribeProvider(provider);
                         const accounts = await web3.eth.getAccounts();
                         selectedAccount = accounts[0];
                         const chainId = await web3.eth.getChainId();
                         updateUI(selectedAccount, chainId);
                         setStatus("Conectado (provider inyectado)");
-                        subscribeProvider(provider);
                         return;
                     } catch (errInjected) {
-                        console.warn("Provider inyectado no disponible o usuario canceló:", errInjected);
+                        console.warn("Error provider inyectado / usuario canceló:", errInjected);
                     }
                 }
 
-                // 2) Intentar Web3Modal (mostrará opciones incluyendo WalletConnect)
-                if (web3Modal) {
-                    setStatus("Abriendo selector de wallets...");
-                    try {
-                        provider = await web3Modal.connect();
-                        console.log("web3Modal.connect result:", provider);
-                    } catch (errWm) {
-                        console.warn("web3Modal.connect falló:", errWm);
-                        provider = null;
-                    }
-                } else {
-                    console.warn("web3Modal no inicializado, se saltará su uso.");
-                }
-
-                // 3) Si web3Modal no proporcionó provider, fallback a WalletConnectProvider directo
-                if (!provider) {
-                    const WCPkg = window.WalletConnectProvider?.default || window.WalletConnectProvider;
-                    if (WCPkg) {
-                        setStatus("Intentando WalletConnect (deep-link en móvil)...");
-                        provider = new WCPkg({ rpc: { [CHAIN_ID]: POLYGON_RPC }, qrcode: false });
-                        // enable() abrirá deep link en móvil o mostrará QR según configuración
-                        await provider.enable();
-                        console.log("WalletConnectProvider enabled");
-                    } else {
-                        throw new Error("No hay WalletConnectProvider disponible");
-                    }
-                }
-
-                if (!provider) throw new Error("No provider after attempts");
-
-                subscribeProvider(provider);
-                web3 = new window.Web3(provider);
-                const accounts = await web3.eth.getAccounts();
-                selectedAccount = accounts[0];
-                const chainId = await web3.eth.getChainId();
-
-                updateUI(selectedAccount, chainId);
-                setStatus("Conectado");
-
-                // Intentar switch de red cuando sea posible
-                if (chainId !== CHAIN_ID) {
-                    try {
-                        if (provider.request) {
-                            await provider.request({ method: "wallet_switchEthereumChain", params: [{ chainId: "0x89" }] });
-                        }
-                    } catch (switchErr) {
-                        console.warn("No se pudo cambiar la red automáticamente:", switchErr);
-                        setStatus("Conectado (red incorrecta). Cambia a Polygon en tu wallet.");
-                    }
-                }
-            } catch (e) {
-                console.error("Error en onConnect:", e);
-                setStatus("Conexión cancelada o fallida.");
-                // Sugerencia rápida para usuarios Android
+                // 2) Si estamos en móvil, intentar WalletConnect DIRECTO (deep-link)
                 if (isMobile) {
-                    alert("En Chrome Android: si WalletConnect no abre la app, prueba a abrir esta página desde el navegador interno de MetaMask/Trust Wallet o reinstala la app de wallet.");
+                    try {
+                        provider = await connectWithWalletConnectDirect();
+                        web3 = new window.Web3(provider);
+                        subscribeProvider(provider);
+                        const accounts = await web3.eth.getAccounts();
+                        selectedAccount = accounts[0];
+                        const chainId = await web3.eth.getChainId();
+                        updateUI(selectedAccount, chainId);
+                        setStatus("Conectado (WalletConnect)");
+                        return;
+                    } catch (wcErr) {
+                        console.warn("WalletConnect directo falló:", wcErr);
+                        // continuar a fallback (web3Modal)
+                    }
+                }
+
+                // 3) Fallback: Web3Modal (desktop or mobile where web3Modal works)
+                if (web3Modal) {
+                    try {
+                        setStatus("Abriendo selector de wallets...");
+                        provider = await web3Modal.connect();
+                        web3 = new window.Web3(provider);
+                        subscribeProvider(provider);
+                        const accounts = await web3.eth.getAccounts();
+                        selectedAccount = accounts[0];
+                        const chainId = await web3.eth.getChainId();
+                        updateUI(selectedAccount, chainId);
+                        setStatus("Conectado (Web3Modal)");
+                        return;
+                    } catch (wmErr) {
+                        console.warn("Web3Modal connect falló:", wmErr);
+                    }
+                }
+
+                // 4) Si llegamos aquí, no pudimos conectar
+                throw new Error("No se pudo conectar con ninguna wallet (intenta abrir la página en el navegador in-app de tu wallet).");
+            } catch (e) {
+                console.error("onConnect error:", e);
+                setStatus("Conexión fallida");
+                if (isMobile) {
+                    alert("Conexión fallida. En Chrome Android: intenta abrir esta página desde el navegador interno de MetaMask o Trust Wallet, o verifica que la app de wallet esté instalada.");
                 }
             }
         }
 
         // =========================================================
-        // SUBSCRIBE / HANDLERS
+        // SUBSCRIPTIONS / EVENTS
         // =========================================================
-        function subscribeProvider(provider) {
-            if (!provider) return;
-            // Some providers expose .on, others use events differently, handle defensively
-            if (provider.on) {
-                provider.on("accountsChanged", (newAccounts) => {
-                    console.log("accountsChanged", newAccounts);
-                    selectedAccount = newAccounts && newAccounts[0];
-                    accountEl.innerText = selectedAccount || "";
+        function subscribeProvider(providerObj) {
+            if (!providerObj) return;
+            if (providerObj.on) {
+                providerObj.on("accountsChanged", (accounts) => {
+                    console.log("accountsChanged", accounts);
+                    selectedAccount = accounts && accounts[0];
+                    if (accountEl) accountEl.innerText = selectedAccount || "";
                 });
-
-                provider.on("chainChanged", (chainId) => {
+                providerObj.on("chainChanged", (chainId) => {
                     console.log("chainChanged", chainId);
                     let c = chainId;
                     if (typeof chainId === "string" && chainId.startsWith("0x")) c = parseInt(chainId, 16);
-                    chainEl.innerText = c;
+                    if (chainEl) chainEl.innerText = c;
                 });
-
-                provider.on("disconnect", (err) => {
+                providerObj.on("disconnect", (err) => {
                     console.log("disconnect", err);
                     onDisconnect();
                 });
             } else {
-                console.log("Provider no tiene evento .on, omitiendo suscripciones.");
+                console.log("Provider no expone .on");
             }
         }
 
         async function onDisconnect() {
             try {
-                if (provider && provider.close) {
-                    await provider.close();
-                }
+                if (provider && provider.close) await provider.close();
             } catch (e) { /* ignore */ }
-
             try {
                 if (web3Modal && web3Modal.clearCachedProvider) await web3Modal.clearCachedProvider();
             } catch (e) { /* ignore */ }
-
             provider = null;
             web3 = null;
             selectedAccount = null;
@@ -324,21 +317,14 @@
                 alert("Ingresa una cantidad válida de USDT.");
                 return;
             }
-
             try {
                 setStatus("Preparando swap...");
                 const usdtContract = new web3.eth.Contract(ERC20_ABI, USDT);
                 let usdtDecimals = 6;
-                try {
-                    usdtDecimals = Number(await usdtContract.methods.decimals().call());
-                } catch (e) { /* fallback */ }
-
+                try { usdtDecimals = Number(await usdtContract.methods.decimals().call()); } catch (e) {}
                 const multiplier = Math.pow(10, usdtDecimals);
                 const amountInBN = web3.utils.toBN(String(Math.floor(Number(amountInput) * multiplier)));
-                if (amountInBN.lte(web3.utils.toBN(0))) {
-                    alert("Monto muy pequeño después de convertir a unidades del token.");
-                    return;
-                }
+                if (amountInBN.lte(web3.utils.toBN(0))) { alert("Monto muy pequeño."); return; }
 
                 const allowance = web3.utils.toBN(await usdtContract.methods.allowance(selectedAccount, QUICKSWAP_ROUTER).call());
                 if (allowance.lt(amountInBN)) {
@@ -350,7 +336,7 @@
                 const router = new web3.eth.Contract(ROUTER_ABI, QUICKSWAP_ROUTER);
                 const path = [USDT, ENOC];
                 const deadline = Math.floor(Date.now() / 1000) + (60 * 10);
-                const amountOutMin = 0;
+                const amountOutMin = 0; // Recomiendo calcular con getAmountsOut + slippage
 
                 await router.methods.swapExactTokensForTokensSupportingFeeOnTransferTokens(
                     amountInBN.toString(),
@@ -364,7 +350,7 @@
             } catch (err) {
                 console.error("swap error:", err);
                 setStatus("Error en la transacción.");
-                alert("Error en la transacción. Revisa la consola remota para detalles.");
+                alert("Error en la transacción. Ver consola remota.");
             }
         }
 
@@ -394,7 +380,6 @@
             initWeb3Modal();
             setStatus("Listo. Pulsa 'Conectar Wallet'.");
             if (web3Modal && web3Modal.cachedProvider) {
-                // Esperar un breve momento para que la UI cargue y luego reconectar
                 setTimeout(()=> onConnect(), 300);
             }
         });
