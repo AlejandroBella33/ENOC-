@@ -201,6 +201,8 @@
         // LÓGICA DE CONEXIÓN (onConnect, onDisconnect, subscribe)
         // =========================================================
         function initWeb3Modal() {
+            const isMobile = /Mobi|Android/i.test(navigator.userAgent);
+
             const providerOptions = {
                 walletconnect: {
                     package: window.WalletConnectProvider?.default || window.WalletConnectProvider,
@@ -208,12 +210,21 @@
                         rpc: {
                             [CHAIN_ID]: POLYGON_RPC 
                         },
-                        network: "polygon"
+                        network: "polygon",
+                        // En desktop mostramos QR para que el usuario escanee; en móviles preferimos deep-link (qrcode: false)
+                        qrcode: !isMobile
                     }
                 }
             };
 
-            web3Modal = new window.Web3Modal.default({
+            const Web3ModalConstructor = (window.Web3Modal && window.Web3Modal.default) ? window.Web3Modal.default : window.Web3Modal;
+            if (!Web3ModalConstructor) {
+                console.error("Web3Modal no está disponible desde el CDN");
+                setStatus("Error: Web3Modal no cargado");
+                return;
+            }
+
+            web3Modal = new Web3ModalConstructor({
                 cacheProvider: true, // Intenta reconectar al proveedor anterior
                 providerOptions,
                 theme: "dark"
@@ -223,7 +234,23 @@
         async function onConnect() {
             try {
                 setStatus("Abriendo el selector de Wallet...");
-                provider = await web3Modal.connect();
+
+                try {
+                    provider = await web3Modal.connect();
+                } catch (errConnect) {
+                    console.warn("web3Modal.connect falló, intentando WalletConnectProvider directamente:", errConnect);
+                    // Fallback: intentar WalletConnectProvider directamente (útil en móviles donde la ventana QR no es deseada)
+                    const WCPkg = window.WalletConnectProvider?.default || window.WalletConnectProvider;
+                    if (WCPkg) {
+                        provider = new WCPkg({ rpc: { [CHAIN_ID]: POLYGON_RPC }, qrcode: false });
+                        await provider.enable(); // abrirá deep link en móviles
+                    } else {
+                        throw errConnect;
+                    }
+                }
+
+                if (!provider) throw new Error('No provider available after connect');
+
                 subscribeProvider(provider);
                 web3 = new window.Web3(provider);
                 
@@ -237,10 +264,16 @@
                 // Verificar si la red es Polygon (137) y solicitar el cambio si no lo es
                 if (chainId !== CHAIN_ID) {
                     try {
-                        await provider.request({ 
-                            method: "wallet_switchEthereumChain", 
-                            params: [{ chainId: "0x89" }] // Hex para 137
-                        });
+                        // Algunos providers (WalletConnect v1) no implementan request(), usar sendAsync / enable fallback
+                        if (provider.request) {
+                            await provider.request({ 
+                                method: "wallet_switchEthereumChain", 
+                                params: [{ chainId: "0x89" }] // Hex para 137
+                            });
+                        } else if (provider.chainId) {
+                            // nothing to do, user must switch in wallet
+                        }
+
                         const newChain = await web3.eth.getChainId();
                         chainEl.innerText = newChain;
                         setStatus("Red cambiada a Polygon.");
@@ -251,11 +284,15 @@
             } catch (e) {
                 console.error("Could not get a wallet connection", e);
                 setStatus("Conexión cancelada o fallida.");
+                // En móvil ayudamos mostrando instrucción breve
+                if (/Mobi|Android/i.test(navigator.userAgent)) {
+                    alert('Si usas Chrome en Android: abre la app de tu wallet (MetaMask/Trust) o usa WalletConnect y selecciona "Abrir en app" cuando se abra el diálogo.');
+                }
             }
         }
 
         function subscribeProvider(provider) {
-            if (!provider.on) return;
+            if (!provider || !provider.on) return;
             
             provider.on("accountsChanged", (newAccounts) => {
                 selectedAccount = newAccounts[0];
@@ -380,7 +417,7 @@
             initWeb3Modal();
             setStatus("Listo. Pulsa 'Conectar Wallet'.");
             // Auto connect if cached
-            if (web3Modal.cachedProvider) {
+            if (web3Modal && web3Modal.cachedProvider) {
                 onConnect();
             }
         });
