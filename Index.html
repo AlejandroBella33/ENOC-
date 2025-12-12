@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <title>ENOC Mini-App (v2)</title>
+
+  <!-- Web3 + Web3Modal + WalletConnect (CDNs) -->
+  <script src="https://cdn.jsdelivr.net/npm/web3@1.10.0/dist/web3.min.js"></script>
+  <script src="https://unpkg.com/@walletconnect/web3-provider@1.7.8/dist/umd/index.min.js"></script>
+  <script src="https://unpkg.com/web3modal@1.9.12/dist/index.js"></script>
+
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <style>
+    :root{--accent:#4a148c;--accent-2:#6a1b9a}
+    body{font-family:Inter,Arial,Helvetica,sans-serif;background:#f5f6fa;color:#222;margin:0;padding:18px;display:flex;justify-content:center}
+    .card{width:100%;max-width:520px;background:#fff;border-radius:12px;padding:22px;box-shadow:0 10px 30px rgba(0,0,0,.08)}
+    h1{color:var(--accent);margin:0 0 8px;font-size:22px}
+    p.lead{color:#444;margin:6px 0 18px}
+    .row{display:flex;gap:8px;flex-wrap:wrap}
+    label{display:block;margin-top:10px;color:#555;font-weight:600}
+    input[type="text"], input[type="number"]{width:100%;padding:10px;border-radius:8px;border:1px solid #d0d0d5;box-sizing:border-box}
+    button{background:var(--accent);color:#fff;border:none;padding:10px 14px;border-radius:8px;font-weight:600;cursor:pointer}
+    button.ghost{background:#eee;color:#333}
+    .muted{color:#666;font-size:13px}
+    #status{margin-top:12px;padding:10px;border-radius:8px;background:#f7f7fa;border:1px solid #efefef}
+    .small{font-size:13px;color:#666}
+    .info-line{display:flex;justify-content:space-between;gap:12px;margin-top:8px}
+    .hint{font-size:13px;color:#777}
+    .warning{background:#fff3cd;border:1px solid #ffe8a1;padding:8px;border-radius:8px;color:#6b4900;margin-top:12px}
+    footer{margin-top:16px;font-size:13px;color:#666}
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>ENOC Mini-App (v2)</h1>
+    <p class="lead">Compra ENOC en Polygon. Conecta tu wallet (MetaMask/Trust Wallet) o usa WalletConnect.</p>
+
+    <div id="controls">
+      <div class="row" style="margin-bottom:8px">
+        <button id="btnConnect">Conectar Wallet</button>
+        <button id="btnDisconnect" class="ghost" style="display:none">Desconectar</button>
+      </div>
+
+      <div id="connectedPanel" style="display:none">
+        <div class="info-line"><div class="small">Cuenta</div><div id="account" class="muted">—</div></div>
+        <div class="info-line"><div class="small">Red</div><div id="chain" class="muted">—</div></div>
+
+        <label for="amountUSDT">Cantidad USDT (Polygon)</label>
+        <input id="amountUSDT" type="number" step="0.0001" placeholder="Ej: 1.5">
+
+        <div style="margin-top:10px" class="row">
+          <button id="btnBuy">Comprar ENOC</button>
+          <button id="btnAddLiquidity" class="ghost">Añadir Liquidez (admin)</button>
+        </div>
+
+        <div id="status" aria-live="polite">Estado: <span id="statusText">Conectado — listo</span></div>
+        <p class="hint">Nota: esta demo usa QuickSwap en Polygon. Verifica siempre la dirección del token antes de operar.</p>
+      </div>
+
+      <div id="notConnectedPanel">
+        <div class="warning" id="noWeb3">Si estás en Chrome/Firefox usa WalletConnect (botón Conectar). Si estás en MetaMask Mobile o Trust Wallet abre la URL desde el navegador integrado.</div>
+      </div>
+    </div>
+
+    <footer>
+      <div class="small">ENOC — Estados No Ordinarios de Conciencia · Red: Polygon</div>
+    </footer>
+  </div>
+
+  <!-- App script -->
+  <script src="app.js"></script>
+</body>
+</html>
