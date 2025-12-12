@@ -1,5 +1,6 @@
 const CONFIG = {
-  enocAddress: "0xab8DF9213d13a3cDe984A83129e6acDaCBA78633",
+  // *** IMPORTANTE: REEMPLAZAR CON LA DIRECCIÓN DEL NUEVO CONTRATO ENOCV2 ***
+  enocAddress: "0xab8DF9213d13a3cDe984A83129e6acDaCBA78633", 
   usdtAddress: "0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174",
   routerAddress: "0xa5E0829CaCEd8fFDD4De3c43696c57F7D7A678ff", // QuickSwap Router
   polygonRpc: "https://polygon-rpc.com", // WalletConnect RPC
@@ -75,14 +76,13 @@ async function connectWallet() {
     showConnected(currentAccount, chainId);
     setStatus("Conectado en chain " + chainId);
 
-    // events
+    // events for accounts/chain changes
     if (providerInstance.on) {
       providerInstance.on("accountsChanged", (accounts) => {
         currentAccount = accounts[0];
         accountEl.innerText = currentAccount;
       });
       providerInstance.on("chainChanged", (chainIdHex) => {
-        // web3Modal walletconnect may pass number or hex; coerce to number
         const normalized = (typeof chainIdHex === "string" && chainIdHex.startsWith("0x")) ? parseInt(chainIdHex, 16) : Number(chainIdHex);
         chainEl.innerText = normalized;
         if (normalized !== CONFIG.desiredChainId) {
@@ -125,7 +125,7 @@ async function disconnectWallet() {
   setStatus("Desconectado");
 }
 
-// BUY function (USDT -> ENOC)
+// BUY function (USDT -> ENOC) - Directly interacts with QuickSwap Router
 async function buyENOC() {
   if (!web3 || !currentAccount) {
     alert("Conecta tu wallet primero.");
@@ -146,8 +146,8 @@ async function buyENOC() {
     const router = new web3.eth.Contract(routerABI, CONFIG.routerAddress);
     const usdt = new web3.eth.Contract(erc20ABI, CONFIG.usdtAddress);
 
-    // Convert USDT to 6-decimals format
-    const amountIn = web3.utils.toWei(amountUSDT, "mwei"); // mwei => 10^6 (USDT tiene 6 decimales)
+    // Convert USDT to 6-decimals format (USDT on Polygon uses 6 decimals)
+    const amountIn = web3.utils.toWei(amountUSDT, "mwei"); 
 
     // Approve router to spend USDT
     setStatus("Solicitando aprobación USDT...");
@@ -171,8 +171,9 @@ async function buyENOC() {
     setStatus("Swap realizado. Revisa tu wallet.");
   } catch (err) {
     console.error("buyENOC error", err);
+    // Este mensaje de error cubre los errores de gas, y también los errores de los límites del nuevo Contrato ENOCv2.
     setStatus("Error en la transacción. La compra/venta puede exceder los límites anti-ballena del contrato.");
-    alert("Error: La transacción ha fallado. Esto puede deberse a que excede los límites de compra/holding del Contrato Anti-Ballena: " + (err.message || err));
+    alert("Error: La transacción ha fallado. Esto puede deberse a que excede los límites de compra/holding del Contrato Anti-Ballena, o a un error de gas: " + (err.message || err));
   }
 }
 
