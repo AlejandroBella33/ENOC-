@@ -1,0 +1,425 @@
+<!doctype html>
+<html lang="es">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>ENOC — Estados No Ordinarios de Conciencia</title>
+    <link rel="stylesheet" href="style.css"> 
+</head>
+<body>
+    <main class="page">
+        <div class="hero">
+            <div class="hero-inner">
+                <img src="logo.png" alt="ENOC logo" class="logo" />
+                <h1 class="title">ENOC</h1>
+                <p class="subtitle">Estados No Ordinarios de Conciencia — Token en Polygon (ENOC)</p>
+
+                <div class="dashboard">
+                    <h3>Comprar ENOC en la App</h3>
+                    <div class="status-box">
+                        <p id="statusText" class="status-msg">Iniciando...</p>
+
+                        <div id="notConnectedPanel">
+                            <button id="btnConnect" class="btn primary">Conectar Wallet</button>
+                        </div>
+
+                        <div id="connectedPanel" style="display: none;">
+                            <p>Wallet Conectada:</p>
+                            <p>Cuenta: <code id="account"></code></p>
+                            <p>Chain ID: <code id="chain"></code></p>
+                            
+                            <div class="buy-interface">
+                                <input type="number" id="amountUSDT" placeholder="Cantidad de USDT a gastar" min="0.01" step="0.01" />
+                                <button id="btnBuy" class="btn primary">Comprar ENOC (Swap)</button>
+                            </div>
+                            
+                            <button id="btnDisconnect" class="btn alt">Desconectar</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="disclaimer-whale-control">
+                    <h3>🛡️ Reglas de Estabilidad y Crecimiento Consciente</h3>
+                    <p><strong>Para fomentar un crecimiento equilibrado y proteger a nuestros *hodlers*, el Contrato Inteligente ENOC incluye mecanismos anti-ballena:</strong></p>
+                    <ul>
+                        <li><strong>Límite de Holding:</strong> Ninguna billetera individual puede poseer más del 5% del suministro total de tokens.</li>
+                        <li><strong>Límite de Venta Progresivo:</strong> Las ventas se limitan a un % de tu balance (5% al inicio, hasta 30%) y solo se permiten cada 8 horas.</li>
+                        <li><strong>Retiro Gradual:</strong> La capacidad máxima de venta aumenta con la antigüedad de tu *holding*.</li>
+                    </ul>
+                    <p class="small">Revisa siempre el contrato oficial para la información más precisa sobre las limitaciones antes de interactuar. Si la compra falla, puede ser por estos límites.[...]
+                </div>
+                <div class="meta">
+                    <div class="contract">
+                        <label>Contrato</label>
+                        <div class="contract-row">
+                            <code id="contract">0xab8DF9213d13a3cDe984A83129e6acDaCBA78633</code>
+                            <button id="copyBtn" class="ghost">Copiar</button>
+                        </div>
+                    </div>
+
+                    <div class="links">
+                        <a id="btnQuickSwap" class="btn primary" target="_blank" rel="noopener">Comprar en QuickSwap</a>
+                        <a id="btnScan" class="btn ghost" target="_blank" rel="noopener">Ver en PolygonScan</a>
+                        <a href="https://t.me/enocon" class="btn alt" target="_blank" rel="noopener">Telegram</a>
+                    </div>
+                </div>
+
+                <p class="desc">
+                    ENOC es un token experimental en Polygon, creado para explorar modelos comunitarios, transparencia y crecimiento consciente.
+                </p>
+
+                <div class="how-to" id="howto">
+                    <h3>Cómo comprar ENOC — Métodos Alternativos</h3>
+
+                    <div class="step">
+                        <h4>1) Comprar con MetaMask (móvil o extensión)</h4>
+                        <ol>
+                            <li>Abrí MetaMask y seleccioná la red <strong>Polygon (Mainnet)</strong>.</li>
+                            <li>Añadí fondos (USDT en Polygon).</li>
+                            <li>Ir a <em>Swap</em> en MetaMask y pegar la dirección del token ENOC (<code>0xab8DF9...6633</code>) en "To".</li>
+                            <li>Seleccioná la cantidad de USDT y ajustá el <strong>slippage</strong> al 1–3%.</li>
+                            <li>Confirmá la transacción.</li>
+                        </ol>
+                        <p class="small">Consejo: si el token no aparece, usá "Import token".</p>
+                    </div>
+
+                    <div class="step">
+                        <h4>2) Comprar en QuickSwap</h4>
+                        <ol>
+                            <li>Ir a QuickSwap: <a href="#" id="quickswapLink" target="_blank">Abrir QuickSwap</a>.</li>
+                            <li>Conectar wallet, elegir <strong>USDT → ENOC</strong>.</li>
+                            <li>Establecer slippage (1–3%) y confirmar swap.</li>
+                        </ol>
+                    </div>
+
+                    <p class="disclaimer">Importante: en todas las compras revisá siempre la dirección del contrato y el slippage.</p>
+                </div>
+
+                <div class="cards">
+                    <div class="card">
+                        <h4>Red</h4>
+                        <p>Polygon (Matic)</p>
+                    </div>
+                    <div class="card">
+                        <h4>Símbolo</h4>
+                        <p>ENOC</p>
+                    </div>
+                    <div class="card">
+                        <h4>Tipo</h4>
+                        <p>ERC-20 (Polygon)</p>
+                    </div>
+                </div>
+
+                <p class="hint">Nota: para comprar desde la web recomendamos MetaMask/Trust/WalletConnect.</p>
+
+                <p class="credit">© ENOC — Proyecto comunitario</p>
+            </div>
+        </div>
+
+        <div id="bg-stars" class="bg-stars" aria-hidden="true"></div>
+        <div id="bg-portal" class="bg-portal" aria-hidden="true"></div>
+    </main>
+    
+    <script src="https://unpkg.com/web3@latest/dist/web3.min.js"></script>
+    <script src="https://unpkg.com/web3modal@1.9.12/dist/index.js"></script>
+    <script src="https://unpkg.com/@walletconnect/web3-provider@1.8.0/dist/umd/index.min.js"></script>
+
+    <script>
+        // =========================================================
+        // CONSTANTES DEL CONTRATO Y DEX
+        // =========================================================
+        const CONTRACT = "0xab8DF9213d13a3cDe984A83129e6acDaCBA78633"; // ⚠️ REEMPLAZAR CON LA DIRECCIÓN FINAL DE ENOCV2
+        const USDT = "0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174";
+        const ENOC = CONTRACT; // Alias
+        const QUICKSWAP_ROUTER = "0xa5E0829CaCEd8fFDD4De3c43696c57F7D7A678ff"; 
+        const POLYGON_RPC = "https://polygon-rpc.com";
+        const CHAIN_ID = 137; // Polygon Mainnet
+
+        const quickswapURL = `https://quickswap.exchange/#/swap?outputCurrency=${ENOC}&inputCurrency=${USDT}`;
+
+        // =========================================================
+        // CONFIGURACIÓN DE ABIS
+        // =========================================================
+        const ERC20_ABI = [
+            {"constant":false,"inputs":[{"name":"_spender","type":"address"},{"name":"_value","type":"uint256"}],"name":"approve","outputs":[{"name":"","type":"bool"}],"type":"function"},
+            {"constant":true,"inputs":[{"name":"_owner","type":"address"},{"name":"_spender","type":"address"}],"name":"allowance","outputs":[{"name":"","type":"uint256"}],"type":"function"},
+            {"constant":true,"inputs":[{"name":"_owner","type":"address"}],"name":"balanceOf","outputs":[{"name":"","type":"uint256"}],"type":"function"},
+            {"constant":true,"inputs":[],"name":"decimals","outputs":[{"name":"","type":"uint8"}],"type":"function"}
+        ];
+
+        // ABI para swapExactTokensForTokensSupportingFeeOnTransferTokens, que soporta tokens con impuestos/fees (como ENOCv2)
+        const ROUTER_ABI = [
+            {
+                "name": "swapExactTokensForTokensSupportingFeeOnTransferTokens",
+                "type": "function",
+                "inputs": [
+                    { "type": "uint256", "name": "amountIn" },
+                    { "type": "uint256", "name": "amountOutMin" },
+                    { "type": "address[]", "name": "path" },
+                    { "type": "address", "name": "to" },
+                    { "type": "uint256", "name": "deadline" }
+                ],
+                "outputs": [],
+                "stateMutability": "nonpayable"
+            }
+        ];
+
+        // =========================================================
+        // VARIABLES DE ESTADO Y UI
+        // =========================================================
+        let web3Modal;
+        let provider;
+        let web3;
+        let selectedAccount;
+        
+        const statusText = document.getElementById("statusText");
+        const notConnectedPanel = document.getElementById("notConnectedPanel");
+        const connectedPanel = document.getElementById("connectedPanel");
+        const accountEl = document.getElementById("account");
+        const chainEl = document.getElementById("chain");
+
+        // =========================================================
+        // FUNCIONES DE UTILIDAD
+        // =========================================================
+        function setStatus(msg) { statusText.innerText = msg; }
+
+        function updateUI(account, chainId) {
+            accountEl.innerText = account;
+            chainEl.innerText = chainId;
+            notConnectedPanel.style.display = "none";
+            connectedPanel.style.display = "block";
+        }
+        
+        function resetUI() {
+            accountEl.innerText = "";
+            chainEl.innerText = "";
+            statusText.innerText = "Desconectado";
+            notConnectedPanel.style.display = "block";
+            connectedPanel.style.display = "none";
+        }
+
+        // =========================================================
+        // LÓGICA DE CONEXIÓN (mejor soporte móvil / deep links)
+        // =========================================================
+        function initWeb3Modal() {
+            const isMobile = /Mobi|Android/i.test(navigator.userAgent);
+
+            const providerOptions = {
+                walletconnect: {
+                    package: window.WalletConnectProvider?.default || window.WalletConnectProvider,
+                    options: {
+                        rpc: {
+                            [CHAIN_ID]: POLYGON_RPC 
+                        },
+                        network: "polygon",
+                        // En desktop mostramos QR para que el usuario escanee; en móviles preferimos deep-link (qrcode: false)
+                        qrcode: !isMobile
+                    }
+                }
+            };
+
+            // Compatibilidad con la exportación CDN (window.Web3Modal o window.Web3Modal.default)
+            const Web3ModalConstructor = (window.Web3Modal && window.Web3Modal.default) ? window.Web3Modal.default : window.Web3Modal;
+            if (!Web3ModalConstructor) {
+                console.error("Web3Modal no está disponible desde el CDN");
+                setStatus("Error: Web3Modal no cargado");
+                return;
+            }
+
+            web3Modal = new Web3ModalConstructor({
+                cacheProvider: true, // Intenta reconectar al proveedor anterior
+                providerOptions,
+                theme: "dark"
+            });
+        }
+
+        async function onConnect() {
+            try {
+                setStatus("Abriendo el selector de Wallet...");
+
+                try {
+                    provider = await web3Modal.connect();
+                } catch (errConnect) {
+                    // Fallback: intentar WalletConnectProvider directamente (útil en móviles donde la ventana QR no es deseada)
+                    console.warn("web3Modal.connect falló, intentando WalletConnectProvider directamente:", errConnect);
+                    const WCPkg = window.WalletConnectProvider?.default || window.WalletConnectProvider;
+                    if (WCPkg) {
+                        provider = new WCPkg({ rpc: { [CHAIN_ID]: POLYGON_RPC }, qrcode: false });
+                        // enable() abrirá la app mediante deep link en móvil
+                        await provider.enable();
+                    } else {
+                        throw errConnect;
+                    }
+                }
+
+                if (!provider) throw new Error('No provider available after connect');
+
+                subscribeProvider(provider);
+                web3 = new window.Web3(provider);
+                
+                const accounts = await web3.eth.getAccounts();
+                selectedAccount = accounts[0];
+                const chainId = await web3.eth.getChainId();
+
+                updateUI(selectedAccount, chainId);
+                setStatus("Conectado");
+
+                // Verificar si la red es Polygon (137) y solicitar el cambio si no lo es
+                if (chainId !== CHAIN_ID) {
+                    try {
+                        // Algunos providers (WalletConnect v1) no implementan request()
+                        if (provider.request) {
+                            await provider.request({ 
+                                method: "wallet_switchEthereumChain", 
+                                params: [{ chainId: "0x89" }] // Hex para 137
+                            });
+                        }
+                        const newChain = await web3.eth.getChainId();
+                        chainEl.innerText = newChain;
+                        setStatus("Red cambiada a Polygon.");
+                    } catch (switchError) {
+                        setStatus("Conectado (red incorrecta). Cambia a Polygon en tu wallet.");
+                    }
+                }
+            } catch (e) {
+                console.error("Could not get a wallet connection", e);
+                setStatus("Conexión cancelada o fallida.");
+                if (/Mobi|Android/i.test(navigator.userAgent)) {
+                    // Consejo práctico cuando se usa Chrome/Android
+                    alert('Si usas Chrome en Android: abre la app de tu wallet (MetaMask/Trust) o usa WalletConnect y selecciona "Abrir en app" cuando se abra el diálogo.');
+                }
+            }
+        }
+
+        function subscribeProvider(provider) {
+            if (!provider || !provider.on) return;
+            
+            provider.on("accountsChanged", (newAccounts) => {
+                selectedAccount = newAccounts[0];
+                accountEl.innerText = selectedAccount || "";
+            });
+            
+            provider.on("chainChanged", (chainId) => {
+                let c = chainId;
+                if (typeof chainId === "string" && chainId.startsWith("0x")) {
+                    c = parseInt(chainId, 16);
+                }
+                chainEl.innerText = c;
+            });
+            
+            provider.on("disconnect", (err) => {
+                console.log("Provider disconnected", err);
+                onDisconnect();
+            });
+        }
+
+        async function onDisconnect() {
+            if (provider && provider.close) {
+                try { await provider.close(); } catch (e) { /* ignore */ }
+            }
+            try { if (web3Modal && web3Modal.clearCachedProvider) await web3Modal.clearCachedProvider(); } catch (e) { /* ignore */ }
+            
+            provider = null;
+            web3 = null;
+            selectedAccount = null;
+            resetUI();
+        }
+
+        // =========================================================
+        // LÓGICA DE COMPRA (SWAP)
+        // =========================================================
+        async function buyENOC() {
+            if (!web3 || !selectedAccount) {
+                alert("Primero conecta tu wallet.");
+                return;
+            }
+            
+            const amountInput = document.getElementById("amountUSDT").value;
+            if (!amountInput || Number(amountInput) <= 0) {
+                alert("Ingresa una cantidad válida de USDT.");
+                return;
+            }
+
+            try {
+                setStatus("Preparando swap...");
+                
+                // Obtener decimales de USDT (en Polygon es 6)
+                const usdtContract = new web3.eth.Contract(ERC20_ABI, USDT);
+                let usdtDecimals = 6;
+                try {
+                    usdtDecimals = await usdtContract.methods.decimals().call();
+                    usdtDecimals = Number(usdtDecimals);
+                } catch (e) { /* fall back to 6 */ }
+                
+                // Calcular amountIn en unidades del token (ej: 1 USDT = 1000000)
+                const multiplier = Math.pow(10, usdtDecimals);
+                const amountInBN = web3.utils.toBN(String(Math.floor(Number(amountInput) * multiplier)));
+
+                if (amountInBN.lte(web3.utils.toBN(0))) {
+                    alert("Monto muy pequeño después de convertir a unidades del token.");
+                    return;
+                }
+
+                // 1. Comprobar Allowance y Aprobar
+                const allowance = web3.utils.toBN(await usdtContract.methods.allowance(selectedAccount, QUICKSWAP_ROUTER).call());
+                if (allowance.lt(amountInBN)) {
+                    setStatus("Aprobando USDT al router...");
+                    await usdtContract.methods.approve(QUICKSWAP_ROUTER, amountInBN.toString()).send({ from: selectedAccount });
+                }
+
+                // 2. Ejecutar Swap
+                setStatus("Ejecutando swap en QuickSwap (espera la confirmación)...");
+                const router = new web3.eth.Contract(ROUTER_ABI, QUICKSWAP_ROUTER);
+                const path = [USDT, ENOC];
+                const deadline = Math.floor(Date.now() / 1000) + (60 * 10); // 10 minutos
+                const amountOutMin = 0; // ATENCIÓN: 0 es riesgoso; ideal calcular un mínimo con slippage
+
+                await router.methods.swapExactTokensForTokensSupportingFeeOnTransferTokens(
+                    amountInBN.toString(),
+                    amountOutMin,
+                    path,
+                    selectedAccount,
+                    deadline
+                ).send({ from: selectedAccount, gas: 800000 }); // Se añade un gas limit alto para mayor seguridad
+
+                setStatus("Swap enviado. Revisa tu wallet / Polygonscan.");
+            } catch (err) {
+                console.error(err);
+                setStatus("Error en la transacción. Revisa los límites anti-ballena de ENOCv2.");
+                alert("Error en la transacción. Revisa la consola para detalles. Esto puede deberse a límites de token o falta de MATIC para gas.");
+            }
+        }
+
+        // =========================================================
+        // INICIALIZACIÓN Y EVENTOS
+        // =========================================================
+        document.getElementById("btnConnect").addEventListener("click", onConnect);
+        document.getElementById("btnDisconnect").addEventListener("click", onDisconnect);
+        document.getElementById("btnBuy").addEventListener("click", buyENOC);
+
+        document.getElementById("contract").innerText = CONTRACT;
+        document.getElementById("btnQuickSwap").href = quickswapURL;
+        document.getElementById("btnScan").href = `https://polygonscan.com/token/${CONTRACT}`;
+        document.getElementById("quickswapLink").href = quickswapURL;
+
+        document.getElementById("copyBtn").addEventListener("click", async () => {
+            try {
+                await navigator.clipboard.writeText(CONTRACT);
+                const btn = document.getElementById("copyBtn");
+                btn.innerText = "Copiado";
+                setTimeout(()=> btn.innerText = "Copiar", 1500);
+            } catch (e) {
+                alert("No se pudo copiar. Copia manualmente: " + CONTRACT);
+            }
+        });
+
+        window.addEventListener("load", () => {
+            initWeb3Modal();
+            setStatus("Listo. Pulsa 'Conectar Wallet'.");
+            // Auto connect if cached (protegido por comprobación)
+            if (web3Modal && web3Modal.cachedProvider) {
+                onConnect();
+            }
+        });
+    </script>
+</body>
+</html>
